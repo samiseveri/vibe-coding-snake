@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3D Snake — FEZ Edition</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #070714; overflow: hidden; font-family: 'Courier New', monospace; }
+    canvas { display: block; }
+
+    #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+
+    #score-panel { position: absolute; top: 24px; left: 24px; }
+    #score-label  { font-size: 11px; letter-spacing: 4px; color: #336655; }
+    #score-value  { font-size: 40px; font-weight: bold; color: #00ffaa;
+                    text-shadow: 0 0 18px #00ffaa, 0 0 40px #00ff8844; }
+    #length-value { font-size: 13px; color: #55aa88; margin-top: 4px; letter-spacing: 2px; }
+
+    #view-panel  { position: absolute; top: 24px; right: 24px; text-align: right; }
+    #view-label  { font-size: 11px; letter-spacing: 4px; color: #223366; }
+    #view-value  { font-size: 22px; color: #6699ff;
+                   text-shadow: 0 0 14px #6699ff, 0 0 30px #4466ff44; }
+    #view-hint   { font-size: 11px; color: #334466; margin-top: 4px; letter-spacing: 1px; }
+
+    #food-hint {
+      position: absolute; bottom: 60px; right: 24px; text-align: right;
+      font-size: 11px; color: #553333; letter-spacing: 1px; line-height: 1.7;
+    }
+    #food-hint span { color: #ff5555; }
+
+    #controls {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      color: #2a3a4a; font-size: 11px; text-align: center; letter-spacing: 2px;
+      white-space: nowrap;
+    }
+    .k { display: inline-block; background: #111122; border: 1px solid #223344;
+         border-radius: 3px; padding: 1px 6px; color: #446688; }
+
+    #overlay {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      text-align: center; display: none;
+      background: rgba(5, 5, 18, 0.88);
+      border: 1px solid #223366;
+      padding: 44px 70px; border-radius: 6px;
+      backdrop-filter: blur(4px);
+    }
+    #overlay h1 {
+      font-size: 56px; letter-spacing: 8px;
+      color: #ff3344;
+      text-shadow: 0 0 30px #ff3344, 0 0 70px #ff112244;
+      margin-bottom: 18px;
+    }
+    #overlay .sub { color: #667799; font-size: 13px; letter-spacing: 3px; }
+    #overlay .final { color: #00ffaa; font-size: 30px;
+                      text-shadow: 0 0 16px #00ffaa; margin: 12px 0 22px; }
+    #overlay .restart { color: #334466; font-size: 12px; letter-spacing: 3px; }
+
+    #start-screen {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      text-align: center;
+      background: rgba(5, 5, 18, 0.88);
+      border: 1px solid #223366;
+      padding: 50px 80px; border-radius: 6px;
+    }
+    #start-screen h1 { font-size: 48px; letter-spacing: 6px; color: #00ffaa;
+                       text-shadow: 0 0 20px #00ffaa; margin-bottom: 10px; }
+    #start-screen .tagline { color: #6699ff; font-size: 14px; letter-spacing: 4px; margin-bottom: 32px; }
+    #start-screen .instructions { color: #445566; font-size: 12px; line-height: 2.2;
+                                   letter-spacing: 1px; text-align: left; }
+    #start-screen .instructions b { color: #6688aa; }
+    #start-screen .go { color: #334455; font-size: 12px; letter-spacing: 3px;
+                        margin-top: 28px; }
+  </style>
+</head>
+<body>
+
+<div id="hud">
+  <div id="score-panel">
+    <div id="score-label">SCORE</div>
+    <div id="score-value">0</div>
+    <div id="length-value">LENGTH: 3</div>
+  </div>
+
+  <div id="view-panel">
+    <div id="view-label">CAMERA VIEW</div>
+    <div id="view-value">FRONT</div>
+    <div id="view-hint">Q / E  rotate  ·  T / G  tilt</div>
+  </div>
+
+  <div id="food-hint">
+    FOOD @ <span id="food-coords">–</span>
+  </div>
+
+  <div id="controls">
+    <span class="k">↑↓←→</span> / <span class="k">WASD</span> move &nbsp;·&nbsp;
+    <span class="k">Q</span><span class="k">E</span> rotate camera &nbsp;·&nbsp;
+    <span class="k">T</span><span class="k">G</span> tilt camera &nbsp;·&nbsp;
+    <span class="k">R</span> restart
+  </div>
+
+  <div id="overlay">
+    <h1>GAME OVER</h1>
+    <div class="sub">FINAL SCORE</div>
+    <div class="final" id="final-score">0</div>
+    <div class="restart">PRESS  R  TO RESTART</div>
+  </div>
+
+  <div id="start-screen">
+    <h1>3D SNAKE</h1>
+    <div class="tagline">FEZ EDITION</div>
+    <div class="instructions">
+      <b>WASD / ARROWS</b> — move the snake<br>
+      <b>Q / E</b> — rotate camera left / right<br>
+      <b>T / G</b> — tilt camera up / down<br>
+      <b>R</b> — restart<br><br>
+      The snake wraps around the cube edges.<br>
+      Eat the red gem. Don't eat yourself.
+    </div>
+    <div class="go">PRESS ANY KEY TO START</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════
+const GRID      = 12;
+const HALF      = (GRID - 1) / 2;   // 5.5
+const STEP_MS   = 175;              // ms between moves
+const CAM_R     = 26;               // camera orbit radius
+const TWEEN_MS  = 450;              // camera rotation duration
+
+// ═══════════════════════════════════════════════════
+//  SIX CAMERA VIEWS
+//  d  = unit direction FROM origin TO camera
+//  r  = screen-right axis in world space
+//  u  = screen-up    axis in world space
+// ═══════════════════════════════════════════════════
+const VIEWS = [
+  { n: 'FRONT',  d: [ 0,  0,  1], r: [ 1, 0,  0], u: [0,  1,  0] },
+  { n: 'RIGHT',  d: [ 1,  0,  0], r: [ 0, 0, -1], u: [0,  1,  0] },
+  { n: 'BACK',   d: [ 0,  0, -1], r: [-1, 0,  0], u: [0,  1,  0] },
+  { n: 'LEFT',   d: [-1,  0,  0], r: [ 0, 0,  1], u: [0,  1,  0] },
+  { n: 'TOP',    d: [ 0,  1,  0], r: [ 1, 0,  0], u: [0,  0, -1] },
+  { n: 'BOTTOM', d: [ 0, -1,  0], r: [ 1, 0,  0], u: [0,  0,  1] },
+];
+
+// ═══════════════════════════════════════════════════
+//  THREE.JS SETUP
+// ═══════════════════════════════════════════════════
+const scene    = new THREE.Scene();
+scene.background = new THREE.Color(0x070714);
+scene.fog        = new THREE.FogExp2(0x070714, 0.019);
+
+const camera   = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 0.1, 200);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+// ── Lights ──────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x18203a, 1.4));
+
+const sun = new THREE.DirectionalLight(0xffffff, 1.1);
+sun.position.set(10, 18, 14);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+scene.add(sun);
+
+const fill = new THREE.PointLight(0x3355ff, 0.5, 55);
+fill.position.set(-8, -6, 8);
+scene.add(fill);
+
+// ── Stars ─────────────────────────────────────
+{
+  const pos = [];
+  for (let i = 0; i < 700; i++)
+    pos.push((Math.random()-0.5)*200, (Math.random()-0.5)*200, (Math.random()-0.5)*200);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0x6688bb, size: 0.22 })));
+}
+
+// ── Grid boundary ─────────────────────────────
+{
+  const box = new THREE.BoxGeometry(GRID, GRID, GRID);
+
+  // Outer edge lines
+  scene.add(new THREE.LineSegments(
+    new THREE.EdgesGeometry(box),
+    new THREE.LineBasicMaterial({ color: 0x1a2a66, opacity: 0.7, transparent: true })
+  ));
+
+  // Translucent inner face (gives the cube a subtle glow)
+  scene.add(new THREE.Mesh(
+    box,
+    new THREE.MeshBasicMaterial({ color: 0x0a0a22, opacity: 0.06, transparent: true, side: THREE.BackSide })
+  ));
+}
+
+// ── Grid lines on bottom face ──────────────────
+{
+  const mat = new THREE.LineBasicMaterial({ color: 0x111833, opacity: 0.35, transparent: true });
+  const y   = -HALF - 0.5;
+  for (let i = 0; i <= GRID; i++) {
+    const x = i - HALF - 0.5;
+    const g1 = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, y, -HALF - 0.5),
+      new THREE.Vector3(x, y,  HALF + 0.5),
+    ]);
+    scene.add(new THREE.Line(g1, mat));
+    const g2 = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-HALF - 0.5, y, x),
+      new THREE.Vector3( HALF + 0.5, y, x),
+    ]);
+    scene.add(new THREE.Line(g2, mat));
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════
+let snake      = [];
+let food       = null;
+let curDir     = { x: 1, y: 0, z: 0 };
+let nextDir    = { x: 1, y: 0, z: 0 };
+let score      = 0;
+let dead       = false;
+let started    = false;
+let lastStep   = 0;
+
+let snakeMeshes = [];
+let foodMesh    = null;
+let foodAngle   = 0;
+let foodLight   = null;
+
+// ── Camera state ──────────────────────────────
+let viewIdx   = 0;
+let horizIdx  = 0;
+const ORIGIN  = new THREE.Vector3();
+
+const tween = {
+  active : false,
+  t0     : 0,
+  fromPos: new THREE.Vector3(),
+  toPos  : new THREE.Vector3(),
+  fromUp : new THREE.Vector3(),
+  toUp   : new THREE.Vector3(),
+};
+
+function viewPos(idx) {
+  const d = VIEWS[idx].d;
+  return new THREE.Vector3(d[0], d[1], d[2]).multiplyScalar(CAM_R);
+}
+
+function startTween(toIdx) {
+  if (tween.active || toIdx === viewIdx) return;
+  tween.fromPos.copy(viewPos(viewIdx));
+  tween.toPos.copy(viewPos(toIdx));
+  tween.fromUp.set(...VIEWS[viewIdx].u);
+  tween.toUp.set(...VIEWS[toIdx].u);
+  tween.t0     = performance.now();
+  tween.active = true;
+  viewIdx = toIdx;
+  document.getElementById('view-value').textContent = VIEWS[toIdx].n;
+}
+
+// ═══════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════
+function gToW(x, y, z) {
+  return new THREE.Vector3(x - HALF, y - HALF, z - HALF);
+}
+
+function wrap(v) { return ((v % GRID) + GRID) % GRID; }
+
+function easeIO(t) { return t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t; }
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+function initGame() {
+  snakeMeshes.forEach(m => scene.remove(m));
+  snakeMeshes = [];
+  if (foodMesh)  { scene.remove(foodMesh);  foodMesh  = null; }
+  if (foodLight) { scene.remove(foodLight); foodLight = null; }
+
+  const mid = Math.floor(GRID / 2);
+  snake = [
+    { x: mid + 1, y: mid, z: mid },
+    { x: mid,     y: mid, z: mid },
+    { x: mid - 1, y: mid, z: mid },
+  ];
+  curDir  = { x: 1, y: 0, z: 0 };
+  nextDir = { x: 1, y: 0, z: 0 };
+  score   = 0;
+  dead    = false;
+
+  snake.forEach((s, i) => addSegMesh(s, i === 0));
+  spawnFood();
+  updateHUD();
+  document.getElementById('overlay').style.display = 'none';
+  lastStep = performance.now();
+}
+
+function addSegMesh(seg, isHead) {
+  const geo = new THREE.BoxGeometry(0.86, 0.86, 0.86);
+  const mat = new THREE.MeshPhongMaterial({
+    color    : isHead ? 0x00ffaa : 0x00cc77,
+    emissive : isHead ? 0x003322 : 0x001811,
+    shininess: 90,
+    specular : 0x336655,
+  });
+  const m = new THREE.Mesh(geo, mat);
+  m.position.copy(gToW(seg.x, seg.y, seg.z));
+  m.castShadow  = true;
+  m.receiveShadow = true;
+  scene.add(m);
+  snakeMeshes.push(m);
+  return m;
+}
+
+function spawnFood() {
+  const used = new Set(snake.map(s => `${s.x},${s.y},${s.z}`));
+  let p;
+  do {
+    p = {
+      x: Math.floor(Math.random() * GRID),
+      y: Math.floor(Math.random() * GRID),
+      z: Math.floor(Math.random() * GRID),
+    };
+  } while (used.has(`${p.x},${p.y},${p.z}`));
+  food = p;
+
+  if (foodMesh)  scene.remove(foodMesh);
+  if (foodLight) scene.remove(foodLight);
+
+  foodMesh = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.48, 1),
+    new THREE.MeshPhongMaterial({ color: 0xff3333, emissive: 0x881111, shininess: 140, specular: 0xffaaaa })
+  );
+  foodMesh.position.copy(gToW(food.x, food.y, food.z));
+  foodMesh.castShadow = true;
+  scene.add(foodMesh);
+
+  foodLight = new THREE.PointLight(0xff2200, 1.2, 4);
+  foodLight.position.copy(foodMesh.position);
+  scene.add(foodLight);
+
+  document.getElementById('food-coords').textContent =
+    `${food.x}, ${food.y}, ${food.z}`;
+}
+
+// ═══════════════════════════════════════════════════
+//  STEP
+// ═══════════════════════════════════════════════════
+function stepSnake() {
+  curDir = { ...nextDir };
+  const h  = snake[0];
+  const nx = wrap(h.x + curDir.x);
+  const ny = wrap(h.y + curDir.y);
+  const nz = wrap(h.z + curDir.z);
+
+  // Self collision (skip the tail, it'll move away)
+  if (snake.slice(0, -1).some(s => s.x === nx && s.y === ny && s.z === nz)) {
+    killSnake(); return;
+  }
+
+  const ate = nx === food.x && ny === food.y && nz === food.z;
+  snake.unshift({ x: nx, y: ny, z: nz });
+  if (ate) { score++; spawnFood(); }
+  else       snake.pop();
+
+  syncMeshes();
+  updateHUD();
+}
+
+function syncMeshes() {
+  while (snakeMeshes.length > snake.length) scene.remove(snakeMeshes.pop());
+  while (snakeMeshes.length < snake.length) {
+    const m = new THREE.Mesh(
+      new THREE.BoxGeometry(0.86, 0.86, 0.86),
+      new THREE.MeshPhongMaterial({ color: 0x00cc77, emissive: 0x001811, shininess: 90 })
+    );
+    m.castShadow = true;
+    scene.add(m);
+    snakeMeshes.push(m);
+  }
+
+  snake.forEach((s, i) => {
+    const m = snakeMeshes[i];
+    m.position.copy(gToW(s.x, s.y, s.z));
+    if (i === 0) {
+      m.material.color.setHex(0x00ffaa);
+      m.material.emissive.setHex(0x004433);
+    } else {
+      const fade = 1 - (i / snake.length) * 0.55;
+      m.material.color.setHSL(0.42, 1.0, 0.22 + fade * 0.22);
+      m.material.emissive.setHSL(0.42, 1.0, 0.03 + fade * 0.05);
+    }
+  });
+}
+
+function killSnake() {
+  dead = true;
+  if (snakeMeshes[0]) {
+    snakeMeshes[0].material.color.setHex(0xff3300);
+    snakeMeshes[0].material.emissive.setHex(0x441100);
+  }
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('overlay').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════
+//  INPUT
+// ═══════════════════════════════════════════════════
+function tryMove(code) {
+  if (dead) return;
+  const v = VIEWS[viewIdx];
+  let dx, dy, dz;
+  switch (code) {
+    case 'r': dx =  v.r[0]; dy =  v.r[1]; dz =  v.r[2]; break;
+    case 'l': dx = -v.r[0]; dy = -v.r[1]; dz = -v.r[2]; break;
+    case 'u': dx =  v.u[0]; dy =  v.u[1]; dz =  v.u[2]; break;
+    case 'd': dx = -v.u[0]; dy = -v.u[1]; dz = -v.u[2]; break;
+    default: return;
+  }
+  dx = Math.round(dx); dy = Math.round(dy); dz = Math.round(dz);
+  // Prevent 180° reversal
+  if (dx === -curDir.x && dy === -curDir.y && dz === -curDir.z) return;
+  nextDir = { x: dx, y: dy, z: dz };
+}
+
+window.addEventListener('keydown', e => {
+  if (!started) {
+    started = true;
+    document.getElementById('start-screen').style.display = 'none';
+    initGame();
+    return;
+  }
+
+  switch (e.key) {
+    case 'ArrowRight': case 'd': case 'D': tryMove('r'); break;
+    case 'ArrowLeft':  case 'a': case 'A': tryMove('l'); break;
+    case 'ArrowUp':    case 'w': case 'W': tryMove('u'); break;
+    case 'ArrowDown':  case 's': case 'S': tryMove('d'); break;
+
+    case 'q': case 'Q':
+      if (viewIdx >= 4) { startTween(horizIdx); }
+      else { horizIdx = (viewIdx - 1 + 4) % 4; startTween(horizIdx); }
+      break;
+    case 'e': case 'E':
+      if (viewIdx >= 4) { startTween(horizIdx); }
+      else { horizIdx = (viewIdx + 1) % 4; startTween(horizIdx); }
+      break;
+    case 't': case 'T':
+      if      (viewIdx < 4)  { horizIdx = viewIdx; startTween(4); }
+      else if (viewIdx === 5) startTween(horizIdx);
+      break;
+    case 'g': case 'G':
+      if      (viewIdx < 4)  { horizIdx = viewIdx; startTween(5); }
+      else if (viewIdx === 4) startTween(horizIdx);
+      break;
+
+    case 'r': case 'R': initGame(); break;
+  }
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))
+    e.preventDefault();
+});
+
+// ═══════════════════════════════════════════════════
+//  HUD
+// ═══════════════════════════════════════════════════
+function updateHUD() {
+  document.getElementById('score-value').textContent = score;
+  document.getElementById('length-value').textContent = 'LENGTH: ' + snake.length;
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER LOOP
+// ═══════════════════════════════════════════════════
+function loop(ts) {
+  requestAnimationFrame(loop);
+
+  // ── Snake step ──
+  if (started && !dead && ts - lastStep >= STEP_MS) {
+    stepSnake();
+    lastStep = ts;
+  }
+
+  // ── Food animation ──
+  if (foodMesh) {
+    foodAngle += 0.045;
+    foodMesh.rotation.y += 0.04;
+    foodMesh.rotation.x += 0.022;
+    const s = 1 + Math.sin(foodAngle) * 0.14;
+    foodMesh.scale.setScalar(s);
+    if (foodLight) {
+      foodLight.intensity = 0.9 + Math.sin(foodAngle * 1.3) * 0.4;
+    }
+  }
+
+  // ── Camera tween ──
+  if (tween.active) {
+    const t  = Math.min((ts - tween.t0) / TWEEN_MS, 1);
+    const et = easeIO(t);
+
+    // Spherical interpolation: lerp normalized dirs, re-normalize, scale
+    const fromN = tween.fromPos.clone().normalize();
+    const toN   = tween.toPos.clone().normalize();
+    camera.position.copy(fromN.lerp(toN, et).normalize().multiplyScalar(CAM_R));
+
+    camera.up.copy(tween.fromUp).lerp(tween.toUp, et).normalize();
+    camera.lookAt(ORIGIN);
+
+    if (t >= 1) tween.active = false;
+  } else {
+    camera.position.copy(viewPos(viewIdx));
+    camera.up.set(...VIEWS[viewIdx].u);
+    camera.lookAt(ORIGIN);
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ═══════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// Position camera at initial view
+camera.position.copy(viewPos(0));
+camera.up.set(0, 1, 0);
+camera.lookAt(ORIGIN);
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
