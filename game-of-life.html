@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conway's Game of Life</title>
+<style>
+  :root {
+    --bg: #0a0a14;
+    --panel: #10101e;
+    --border: #1e1e38;
+    --accent: #00e5cc;
+    --accent2: #7c3aed;
+    --text: #d0d0f0;
+    --text-dim: #50508a;
+    --btn-bg: #181830;
+    --btn-hover: #22223c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 14px;
+  }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 210px;
+    min-width: 210px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 12px;
+    gap: 12px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  #sidebar h1 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .section-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+  }
+
+  .section { display: flex; flex-direction: column; gap: 6px; }
+
+  .divider { height: 1px; background: var(--border); flex-shrink: 0; }
+
+  /* ── Buttons ── */
+  button {
+    background: var(--btn-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    width: 100%;
+    text-align: center;
+    line-height: 1.3;
+  }
+  button:hover { background: var(--btn-hover); border-color: var(--accent); }
+
+  button.primary {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  button.primary:hover { background: #00cdb8; }
+
+  button.btn-active {
+    background: #1a3a36;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-row { display: flex; gap: 5px; }
+  .btn-row button { flex: 1; }
+
+  /* ── Inputs ── */
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .row label { font-size: 0.78rem; color: var(--text-dim); flex: 1; }
+  .row .val { font-size: 0.78rem; color: var(--accent); min-width: 26px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  input[type="number"] {
+    background: var(--btn-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    padding: 4px 6px;
+    width: 58px;
+    font-size: 0.8rem;
+  }
+  input[type="number"]:focus { outline: 1px solid var(--accent); }
+
+  input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
+
+  select {
+    background: var(--btn-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 7px 8px;
+    width: 100%;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  select:focus { outline: 1px solid var(--accent); }
+
+  /* ── Stats ── */
+  .stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+  }
+  .stat-label { color: var(--text-dim); }
+  .stat-val {
+    color: var(--accent);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.82rem;
+  }
+
+  /* ── Canvas area ── */
+  #canvas-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    background: radial-gradient(ellipse at center, #0e0e1e 0%, #07070f 100%);
+  }
+
+  canvas {
+    cursor: crosshair;
+    display: block;
+    border: 1px solid var(--border);
+    box-shadow: 0 0 40px rgba(0, 229, 204, 0.06);
+  }
+
+  #hint {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    pointer-events: none;
+    line-height: 1.7;
+    text-align: right;
+  }
+
+  #fps-display {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <h1>Game of Life</h1>
+
+  <div class="divider"></div>
+
+  <!-- Simulation controls -->
+  <div class="section">
+    <div class="section-label">Simulation</div>
+    <button id="btn-play" class="primary">▶ Play</button>
+    <div class="btn-row">
+      <button id="btn-step">⏭ Step</button>
+      <button id="btn-clear">✕ Clear</button>
+    </div>
+    <button id="btn-random">⚡ Random Fill</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Speed -->
+  <div class="section">
+    <div class="section-label">Speed</div>
+    <div class="row">
+      <label>FPS</label>
+      <span class="val" id="fps-val">15</span>
+    </div>
+    <input type="range" id="speed" min="1" max="60" value="15">
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Grid size -->
+  <div class="section">
+    <div class="section-label">Grid Size</div>
+    <div class="row">
+      <label>Width</label>
+      <input type="number" id="grid-w" value="80" min="5" max="400">
+    </div>
+    <div class="row">
+      <label>Height</label>
+      <input type="number" id="grid-h" value="60" min="5" max="300">
+    </div>
+    <button id="btn-resize">Apply Size</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Draw mode -->
+  <div class="section">
+    <div class="section-label">Draw Mode</div>
+    <div class="btn-row">
+      <button class="draw-mode-btn btn-active" data-mode="draw">✏ Draw</button>
+      <button class="draw-mode-btn" data-mode="erase">⌫ Erase</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Patterns -->
+  <div class="section">
+    <div class="section-label">Patterns</div>
+    <select id="preset-select">
+      <option value="">— Select pattern —</option>
+      <optgroup label="Still Life">
+        <option value="block">Block</option>
+        <option value="beehive">Beehive</option>
+        <option value="loaf">Loaf</option>
+      </optgroup>
+      <optgroup label="Oscillators">
+        <option value="blinker">Blinker (p2)</option>
+        <option value="toad">Toad (p2)</option>
+        <option value="beacon">Beacon (p2)</option>
+        <option value="pulsar">Pulsar (p3)</option>
+        <option value="pentadecathlon">Pentadecathlon (p15)</option>
+      </optgroup>
+      <optgroup label="Spaceships">
+        <option value="glider">Glider</option>
+        <option value="lwss">Lightweight Spaceship</option>
+        <option value="mwss">Middleweight Spaceship</option>
+      </optgroup>
+      <optgroup label="Guns & Misc">
+        <option value="gosper">Gosper Glider Gun</option>
+        <option value="r-pentomino">R-Pentomino</option>
+        <option value="diehard">Diehard</option>
+        <option value="acorn">Acorn</option>
+      </optgroup>
+    </select>
+    <div class="btn-row">
+      <button id="btn-place">Place Center</button>
+      <button id="btn-place-clear">Clear+Place</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Visual -->
+  <div class="section">
+    <div class="section-label">Visuals</div>
+    <select id="color-theme">
+      <option value="cyan">Cyan (default)</option>
+      <option value="fire">Fire</option>
+      <option value="matrix">Matrix</option>
+      <option value="plasma">Plasma</option>
+      <option value="ice">Ice</option>
+      <option value="rainbow">Rainbow</option>
+      <option value="mono">Monochrome</option>
+    </select>
+    <div class="row" style="margin-top:2px">
+      <label>Show grid lines</label>
+      <input type="checkbox" id="show-grid" checked>
+    </div>
+    <div class="row">
+      <label>Fade dead cells</label>
+      <input type="checkbox" id="fade-dead">
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Stats -->
+  <div class="section">
+    <div class="section-label">Statistics</div>
+    <div class="stat"><span class="stat-label">Generation</span><span class="stat-val" id="stat-gen">0</span></div>
+    <div class="stat"><span class="stat-label">Population</span><span class="stat-val" id="stat-pop">0</span></div>
+    <div class="stat"><span class="stat-label">Births</span><span class="stat-val" id="stat-births">0</span></div>
+    <div class="stat"><span class="stat-label">Deaths</span><span class="stat-val" id="stat-deaths">0</span></div>
+    <div class="stat"><span class="stat-label">Density</span><span class="stat-val" id="stat-density">0%</span></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Keyboard shortcuts -->
+  <div class="section" style="padding-bottom:4px">
+    <div class="section-label">Shortcuts</div>
+    <div class="stat"><span class="stat-label">Space</span><span style="color:var(--text-dim);font-size:0.72rem">Play / Pause</span></div>
+    <div class="stat"><span class="stat-label">N / →</span><span style="color:var(--text-dim);font-size:0.72rem">Step</span></div>
+    <div class="stat"><span class="stat-label">R</span><span style="color:var(--text-dim);font-size:0.72rem">Random fill</span></div>
+    <div class="stat"><span class="stat-label">C</span><span style="color:var(--text-dim);font-size:0.72rem">Clear</span></div>
+    <div class="stat"><span class="stat-label">G</span><span style="color:var(--text-dim);font-size:0.72rem">Toggle grid</span></div>
+  </div>
+</div>
+
+<div id="canvas-area">
+  <canvas id="canvas"></canvas>
+  <div id="hint">Left-click/drag: draw &nbsp;|&nbsp; Right-click/drag: erase</div>
+  <div id="fps-display"></div>
+</div>
+
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+
+let cols = 80, rows = 60;
+let grid, ageGrid, fadeGrid;
+let running = false;
+let generation = 0;
+let lastBirths = 0, lastDeaths = 0;
+let drawMode = 'draw';
+let colorTheme = 'cyan';
+let showGridLines = true;
+let fadeDead = false;
+let targetFPS = 15;
+let lastStepTime = 0;
+let animId = null;
+let cellSize = 10;
+
+// Actual FPS tracking
+let fpsFrameCount = 0;
+let fpsLastTime = performance.now();
+let actualFPS = 0;
+
+// ─────────────────────────────────────────────
+// Grid management
+// ─────────────────────────────────────────────
+
+function makeGrid()   { return Array.from({length: rows}, () => new Uint8Array(cols)); }
+function makeAge()    { return Array.from({length: rows}, () => new Uint16Array(cols)); }
+function makeFade()   { return Array.from({length: rows}, () => new Float32Array(cols)); }
+
+function initGrid(keepPattern) {
+  if (!keepPattern) {
+    grid    = makeGrid();
+    ageGrid = makeAge();
+  }
+  fadeGrid = makeFade();
+  generation = 0;
+  lastBirths = 0;
+  lastDeaths = 0;
+  updateStats();
+}
+
+// ─────────────────────────────────────────────
+// Simulation
+// ─────────────────────────────────────────────
+
+function step() {
+  const nextGrid = makeGrid();
+  const nextAge  = makeAge();
+  let births = 0, deaths = 0;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const n = countNeighbors(r, c);
+      const alive = grid[r][c];
+      if (alive) {
+        if (n === 2 || n === 3) {
+          nextGrid[r][c] = 1;
+          nextAge[r][c]  = ageGrid[r][c] + 1;
+        } else {
+          deaths++;
+          if (fadeDead) fadeGrid[r][c] = 1.0;
+        }
+      } else {
+        if (n === 3) {
+          nextGrid[r][c] = 1;
+          nextAge[r][c]  = 1;
+          births++;
+        }
+      }
+    }
+  }
+
+  // Decay fade
+  if (fadeDead) {
+    for (let r = 0; r < rows; r++)
+      for (let c = 0; c < cols; c++)
+        if (fadeGrid[r][c] > 0) fadeGrid[r][c] = Math.max(0, fadeGrid[r][c] - 0.12);
+  }
+
+  grid    = nextGrid;
+  ageGrid = nextAge;
+  generation++;
+  lastBirths = births;
+  lastDeaths = deaths;
+  updateStats();
+}
+
+function countNeighbors(r, c) {
+  let n = 0;
+  const rp = r > 0       ? r - 1 : rows - 1;
+  const rn = r < rows-1  ? r + 1 : 0;
+  const cp = c > 0       ? c - 1 : cols - 1;
+  const cn = c < cols-1  ? c + 1 : 0;
+  n += grid[rp][cp] + grid[rp][c] + grid[rp][cn];
+  n += grid[r][cp]  +                grid[r][cn];
+  n += grid[rn][cp] + grid[rn][c] + grid[rn][cn];
+  return n;
+}
+
+function randomFill(density = 0.28) {
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      grid[r][c]    = Math.random() < density ? 1 : 0;
+      ageGrid[r][c] = grid[r][c] ? (Math.floor(Math.random() * 8) + 1) : 0;
+      fadeGrid[r][c] = 0;
+    }
+  }
+  generation = 0;
+  updateStats();
+}
+
+// ─────────────────────────────────────────────
+// Color themes
+// ─────────────────────────────────────────────
+
+// Returns [r,g,b] for a live cell of given age (1+)
+const themes = {
+  cyan(age) {
+    const t = Math.min(1, age / 40);
+    const r = 0;
+    const g = Math.round(229 - 149 * t);
+    const b = Math.round(204 + 51 * t);
+    return [r, g, b];
+  },
+  fire(age) {
+    const t = Math.min(1, age / 40);
+    return [255, Math.round(230 - 190 * t), Math.round(40 - 40 * t)];
+  },
+  matrix(age) {
+    const t = Math.min(1, age / 40);
+    return [0, Math.round(255 - 120 * t), Math.round(30 * (1 - t))];
+  },
+  plasma(age) {
+    const t = Math.min(1, age / 40);
+    return [Math.round(220 - 100 * t), Math.round(50 * t), Math.round(255 - 50 * t)];
+  },
+  ice(age) {
+    const t = Math.min(1, age / 40);
+    return [Math.round(180 * t), Math.round(220 - 20 * t), 255];
+  },
+  rainbow(age) {
+    const hue = (age * 6) % 360;
+    return hslToRgb(hue, 1, 0.58);
+  },
+  mono(age) {
+    const v = Math.round(Math.min(255, 120 + age * 4));
+    return [v, v, v];
+  }
+};
+
+function hslToRgb(h, s, l) {
+  const c  = (1 - Math.abs(2 * l - 1)) * s;
+  const x  = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m  = l - c / 2;
+  let r = 0, g = 0, b = 0;
+  if      (h < 60)  { r=c; g=x; b=0; }
+  else if (h < 120) { r=x; g=c; b=0; }
+  else if (h < 180) { r=0; g=c; b=x; }
+  else if (h < 240) { r=0; g=x; b=c; }
+  else if (h < 300) { r=x; g=0; b=c; }
+  else              { r=c; g=0; b=x; }
+  return [Math.round((r+m)*255), Math.round((g+m)*255), Math.round((b+m)*255)];
+}
+
+// ─────────────────────────────────────────────
+// Canvas rendering
+// ─────────────────────────────────────────────
+
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+
+function computeCellSize() {
+  const area = document.getElementById('canvas-area');
+  const aw = area.clientWidth  - 16;
+  const ah = area.clientHeight - 16;
+  const cw = Math.floor(aw / cols);
+  const ch = Math.floor(ah / rows);
+  cellSize = Math.max(2, Math.min(cw, ch, 40));
+}
+
+function resizeCanvas() {
+  computeCellSize();
+  canvas.width  = cols * cellSize;
+  canvas.height = rows * cellSize;
+}
+
+function render() {
+  const cw = canvas.width, ch = canvas.height;
+  const cs = cellSize;
+
+  // Background
+  ctx.fillStyle = '#07070f';
+  ctx.fillRect(0, 0, cw, ch);
+
+  const colorFn = themes[colorTheme] || themes.cyan;
+  const imgData = ctx.createImageData(cw, ch);
+  const px      = imgData.data;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const alive = grid[r][c];
+      const age   = ageGrid[r][c];
+      const fade  = fadeDead ? fadeGrid[r][c] : 0;
+
+      if (!alive && fade <= 0) continue;
+
+      let R, G, B, A;
+
+      if (alive) {
+        const newborn = age === 1;
+        [R, G, B] = colorFn(age);
+        // Bright flash for newborns
+        if (newborn) {
+          R = Math.min(255, R + 80);
+          G = Math.min(255, G + 80);
+          B = Math.min(255, B + 80);
+        }
+        A = 255;
+      } else {
+        // Fading dead cell
+        const base = colorFn(3);
+        const f = fade;
+        R = Math.round(base[0] * f * 0.4);
+        G = Math.round(base[1] * f * 0.4);
+        B = Math.round(base[2] * f * 0.4);
+        A = Math.round(f * 180);
+      }
+
+      // Fill the cell pixels
+      const x0 = c * cs;
+      const y0 = r * cs;
+      const x1 = x0 + cs;
+      const y1 = y0 + cs;
+
+      for (let py = y0; py < y1; py++) {
+        for (let px2 = x0; px2 < x1; px2++) {
+          const i = (py * cw + px2) * 4;
+          px[i]   = R;
+          px[i+1] = G;
+          px[i+2] = B;
+          px[i+3] = A;
+        }
+      }
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+
+  // Grid lines
+  if (showGridLines && cs >= 5) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.045)';
+    ctx.lineWidth   = 0.5;
+    ctx.beginPath();
+    for (let c = 0; c <= cols; c++) {
+      ctx.moveTo(c * cs, 0);
+      ctx.lineTo(c * cs, ch);
+    }
+    for (let r = 0; r <= rows; r++) {
+      ctx.moveTo(0,  r * cs);
+      ctx.lineTo(cw, r * cs);
+    }
+    ctx.stroke();
+  }
+}
+
+// ─────────────────────────────────────────────
+// Game loop
+// ─────────────────────────────────────────────
+
+function gameLoop(ts) {
+  const interval = 1000 / targetFPS;
+  if (ts - lastStepTime >= interval) {
+    step();
+    render();
+    lastStepTime = ts;
+
+    // FPS counter
+    fpsFrameCount++;
+    if (ts - fpsLastTime >= 500) {
+      actualFPS = Math.round(fpsFrameCount / ((ts - fpsLastTime) / 1000));
+      fpsFrameCount = 0;
+      fpsLastTime   = ts;
+      document.getElementById('fps-display').textContent = `${actualFPS} fps`;
+    }
+  }
+  if (running) animId = requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+  if (running) return;
+  running      = true;
+  lastStepTime = 0;
+  fpsLastTime  = performance.now();
+  fpsFrameCount = 0;
+  animId       = requestAnimationFrame(gameLoop);
+  const btn    = document.getElementById('btn-play');
+  btn.textContent = '⏸ Pause';
+  btn.classList.remove('primary');
+  btn.classList.add('btn-active');
+}
+
+function pauseGame() {
+  if (!running) return;
+  running = false;
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  document.getElementById('fps-display').textContent = '';
+  const btn = document.getElementById('btn-play');
+  btn.textContent = '▶ Play';
+  btn.classList.remove('btn-active');
+  btn.classList.add('primary');
+}
+
+function togglePlay() {
+  running ? pauseGame() : startGame();
+}
+
+// ─────────────────────────────────────────────
+// Drawing
+// ─────────────────────────────────────────────
+
+let isDrawing  = false;
+let drawValue  = 1;
+let lastDrawR  = -1;
+let lastDrawC  = -1;
+
+function cellAt(e) {
+  const rect = canvas.getBoundingClientRect();
+  const c = Math.floor((e.clientX - rect.left)  / cellSize);
+  const r = Math.floor((e.clientY - rect.top)   / cellSize);
+  if (r >= 0 && r < rows && c >= 0 && c < cols) return {r, c};
+  return null;
+}
+
+function paintCell(r, c, val) {
+  if (r === lastDrawR && c === lastDrawC) return;
+  lastDrawR = r; lastDrawC = c;
+  grid[r][c]     = val;
+  ageGrid[r][c]  = val ? 1 : 0;
+  fadeGrid[r][c] = 0;
+  updateStats();
+  if (!running) render();
+}
+
+canvas.addEventListener('mousedown', e => {
+  e.preventDefault();
+  isDrawing = true;
+  lastDrawR = -1; lastDrawC = -1;
+
+  if (e.button === 2 || drawMode === 'erase') {
+    drawValue = 0;
+  } else {
+    const cell = cellAt(e);
+    drawValue = (cell && grid[cell.r][cell.c]) ? 0 : 1;
+  }
+  const cell = cellAt(e);
+  if (cell) paintCell(cell.r, cell.c, drawValue);
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!isDrawing) return;
+  const cell = cellAt(e);
+  if (cell) paintCell(cell.r, cell.c, drawValue);
+});
+
+canvas.addEventListener('mouseup',    () => { isDrawing = false; });
+canvas.addEventListener('mouseleave', () => { isDrawing = false; });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// Touch support
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  isDrawing = true;
+  lastDrawR = -1; lastDrawC = -1;
+  drawValue = drawMode === 'erase' ? 0 : 1;
+  const t    = e.touches[0];
+  const cell = cellAt(t);
+  if (cell) paintCell(cell.r, cell.c, drawValue);
+}, {passive: false});
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!isDrawing) return;
+  const t    = e.touches[0];
+  const cell = cellAt(t);
+  if (cell) paintCell(cell.r, cell.c, drawValue);
+}, {passive: false});
+
+canvas.addEventListener('touchend', () => { isDrawing = false; });
+
+// ─────────────────────────────────────────────
+// Stats
+// ─────────────────────────────────────────────
+
+function updateStats() {
+  let pop = 0;
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      pop += grid[r][c];
+  const density = ((pop / (rows * cols)) * 100).toFixed(1);
+  document.getElementById('stat-gen').textContent     = generation.toLocaleString();
+  document.getElementById('stat-pop').textContent     = pop.toLocaleString();
+  document.getElementById('stat-births').textContent  = lastBirths.toLocaleString();
+  document.getElementById('stat-deaths').textContent  = lastDeaths.toLocaleString();
+  document.getElementById('stat-density').textContent = density + '%';
+}
+
+// ─────────────────────────────────────────────
+// Patterns
+// ─────────────────────────────────────────────
+
+const PATTERNS = {
+  block: [
+    [1,1],
+    [1,1]
+  ],
+  beehive: [
+    [0,1,1,0],
+    [1,0,0,1],
+    [0,1,1,0]
+  ],
+  loaf: [
+    [0,1,1,0],
+    [1,0,0,1],
+    [0,1,0,1],
+    [0,0,1,0]
+  ],
+  blinker: [
+    [1,1,1]
+  ],
+  toad: [
+    [0,1,1,1],
+    [1,1,1,0]
+  ],
+  beacon: [
+    [1,1,0,0],
+    [1,0,0,0],
+    [0,0,0,1],
+    [0,0,1,1]
+  ],
+  pulsar: [
+    [0,0,1,1,1,0,0,0,1,1,1,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+    [0,0,1,1,1,0,0,0,1,1,1,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,1,1,1,0,0,0,1,1,1,0,0],
+    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+    [1,0,0,0,0,1,0,1,0,0,0,0,1],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,1,1,1,0,0,0,1,1,1,0,0]
+  ],
+  pentadecathlon: [
+    [0,1,0],
+    [0,1,0],
+    [1,0,1],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0],
+    [1,0,1],
+    [0,1,0],
+    [0,1,0]
+  ],
+  glider: [
+    [0,1,0],
+    [0,0,1],
+    [1,1,1]
+  ],
+  lwss: [
+    [0,1,0,0,1],
+    [1,0,0,0,0],
+    [1,0,0,0,1],
+    [1,1,1,1,0]
+  ],
+  mwss: [
+    [0,0,1,1,1,1,1],
+    [1,0,0,0,0,0,1],
+    [0,0,0,0,0,0,1],
+    [1,0,0,0,0,1,0],
+    [0,0,0,1,0,0,0]
+  ],
+  gosper: [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+    [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+    [1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ],
+  'r-pentomino': [
+    [0,1,1],
+    [1,1,0],
+    [0,1,0]
+  ],
+  diehard: [
+    [0,0,0,0,0,0,1,0],
+    [1,1,0,0,0,0,0,0],
+    [0,1,0,0,0,1,1,1]
+  ],
+  acorn: [
+    [0,1,0,0,0,0,0],
+    [0,0,0,1,0,0,0],
+    [1,1,0,0,1,1,1]
+  ]
+};
+
+function placePattern(name, clearFirst) {
+  const pat = PATTERNS[name];
+  if (!pat) return;
+
+  if (clearFirst) {
+    grid    = makeGrid();
+    ageGrid = makeAge();
+    fadeGrid = makeFade();
+    generation = 0;
+  }
+
+  const pr = pat.length;
+  const pc = pat[0].length;
+  const sr = Math.floor((rows - pr) / 2);
+  const sc = Math.floor((cols - pc) / 2);
+
+  for (let r = 0; r < pr; r++) {
+    for (let c = 0; c < pc; c++) {
+      const gr = sr + r, gc = sc + c;
+      if (gr >= 0 && gr < rows && gc >= 0 && gc < cols) {
+        grid[gr][gc]    = pat[r][c];
+        ageGrid[gr][gc] = pat[r][c] ? 1 : 0;
+      }
+    }
+  }
+  updateStats();
+  render();
+}
+
+// ─────────────────────────────────────────────
+// UI events
+// ─────────────────────────────────────────────
+
+document.getElementById('btn-play').addEventListener('click', togglePlay);
+
+document.getElementById('btn-step').addEventListener('click', () => {
+  pauseGame();
+  step();
+  render();
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  pauseGame();
+  initGrid(false);
+  render();
+});
+
+document.getElementById('btn-random').addEventListener('click', () => {
+  randomFill();
+  render();
+});
+
+document.getElementById('btn-resize').addEventListener('click', () => {
+  const w = parseInt(document.getElementById('grid-w').value, 10);
+  const h = parseInt(document.getElementById('grid-h').value, 10);
+  if (w >= 5 && w <= 400 && h >= 5 && h <= 300) {
+    cols = w; rows = h;
+    initGrid(false);
+    resizeCanvas();
+    render();
+  }
+});
+
+document.getElementById('speed').addEventListener('input', e => {
+  targetFPS = parseInt(e.target.value, 10);
+  document.getElementById('fps-val').textContent = targetFPS;
+});
+
+document.getElementById('show-grid').addEventListener('change', e => {
+  showGridLines = e.target.checked;
+  render();
+});
+
+document.getElementById('fade-dead').addEventListener('change', e => {
+  fadeDead = e.target.checked;
+  if (!fadeDead) fadeGrid = makeFade();
+  render();
+});
+
+document.getElementById('color-theme').addEventListener('change', e => {
+  colorTheme = e.target.value;
+  render();
+});
+
+document.getElementById('btn-place').addEventListener('click', () => {
+  const sel = document.getElementById('preset-select').value;
+  if (sel) placePattern(sel, false);
+});
+
+document.getElementById('btn-place-clear').addEventListener('click', () => {
+  const sel = document.getElementById('preset-select').value;
+  if (sel) { pauseGame(); placePattern(sel, true); }
+});
+
+document.querySelectorAll('.draw-mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    drawMode = btn.dataset.mode;
+    document.querySelectorAll('.draw-mode-btn').forEach(b => b.classList.remove('btn-active'));
+    btn.classList.add('btn-active');
+  });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+  switch (e.key) {
+    case ' ':          e.preventDefault(); togglePlay();                     break;
+    case 'ArrowRight':
+    case 'n':          e.preventDefault(); pauseGame(); step(); render();   break;
+    case 'r':          randomFill(); render();                               break;
+    case 'c':          pauseGame(); initGrid(false); render();               break;
+    case 'g':          {
+      const cb = document.getElementById('show-grid');
+      cb.checked = !cb.checked;
+      showGridLines = cb.checked;
+      render();
+      break;
+    }
+  }
+});
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  render();
+});
+
+// ─────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────
+
+initGrid(false);
+resizeCanvas();
+render();
+</script>
+</body>
+</html>
