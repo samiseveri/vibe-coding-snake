@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>theFIRMA – Project Application Process</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f172a;
+      padding: 2.5rem;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      letter-spacing: -0.01em;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 0.3rem;
+    }
+
+    .scroll-wrapper {
+      overflow-x: auto;
+      border-radius: 14px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 1280px;
+      background: #1e293b;
+    }
+
+    thead th {
+      padding: 0.9rem 0.6rem 0.7rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid #334155;
+      white-space: nowrap;
+    }
+
+    thead th.col-step {
+      background: #0f172a;
+      color: #94a3b8;
+      width: 150px;
+      min-width: 150px;
+      font-size: 0.65rem;
+    }
+
+    thead th.col-student { color: #fbbf24; border-top: 3px solid #f59e0b; background: #1e293b; }
+    thead th.col-mentor  { color: #a78bfa; border-top: 3px solid #8b5cf6; background: #1e293b; }
+    thead th.col-teacher { color: #4ade80; border-top: 3px solid #22c55e; background: #1e293b; }
+    thead th.col-ceo     { color: #fb7185; border-top: 3px solid #f43f5e; background: #1e293b; }
+    thead th.col-ipo     { color: #60a5fa; border-top: 3px solid #3b82f6; background: #1e293b; }
+
+    tbody tr { border-bottom: 1px solid #334155; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover td { background-color: #263348; }
+    tbody tr:hover td.col-step-cell { background-color: #0f172a; }
+
+    td.col-step-cell {
+      background: #0f172a;
+      padding: 1rem 0.85rem;
+      vertical-align: middle;
+      border-right: 1px solid #334155;
+    }
+
+    .step-num {
+      font-size: 0.6rem;
+      font-weight: 800;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.25rem;
+    }
+
+    .step-name {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      line-height: 1.35;
+    }
+
+    td.cell {
+      padding: 0.55rem 0.45rem;
+      vertical-align: middle;
+      text-align: center;
+      min-width: 115px;
+    }
+
+    td.empty { background: #1a2537; }
+
+    .card {
+      border-radius: 7px;
+      padding: 0.5rem 0.6rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    .c-student { background: #422006; color: #fde68a; border-left: 3px solid #f59e0b; }
+    .c-mentor  { background: #2e1065; color: #ddd6fe; border-left: 3px solid #8b5cf6; }
+    .c-teacher { background: #052e16; color: #bbf7d0; border-left: 3px solid #22c55e; }
+    .c-ceo     { background: #4c0519; color: #fecdd3; border-left: 3px solid #f43f5e; }
+    .c-ipo     { background: #172554; color: #bfdbfe; border-left: 3px solid #3b82f6; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      color: #94a3b8;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>theFIRMA — Project Application Process</h1>
+    <p>Turku University of Applied Sciences (TUAS)</p>
+  </header>
+
+  <div class="scroll-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-step">Step</th>
+          <th class="col-student">PM / SM</th>
+          <th class="col-student">Developer</th>
+          <th class="col-student">Designer</th>
+          <th class="col-student">Tester</th>
+          <th class="col-mentor">Mentors</th>
+          <th class="col-student">Marketing</th>
+          <th class="col-teacher">theFIRMA<br>Teacher</th>
+          <th class="col-ceo">theFIRMA<br>CEO</th>
+          <th class="col-ipo">Internal PO</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- ── Step 1 ── -->
+        <tr>
+          <td class="col-step-cell">
+            <div class="step-num">Step 1</div>
+            <div class="step-name">Put project<br>into PG</div>
+          </td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td id="ceo-1" class="cell"><div class="card c-ceo">Submits project brief to PG</div></td>
+          <td id="ipo-1" class="cell"><div class="card c-ipo">Defines project scope &amp; goals in PG</div></td>
+        </tr>
+
+        <!-- ── Step 2 ── -->
+        <tr>
+          <td class="col-step-cell">
+            <div class="step-num">Step 2</div>
+            <div class="step-name">Define project<br>roles &amp; quantity</div>
+          </td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td id="teacher-2" class="cell"><div class="card c-teacher">Sets required roles &amp; headcount per project</div></td>
+          <td id="ceo-2" class="cell"><div class="card c-ceo">Approves role plan</div></td>
+          <td id="ipo-2" class="cell"><div class="card c-ipo">Confirms project requirements</div></td>
+        </tr>
+
+        <!-- ── Step 3 ── -->
+        <tr>
+          <td class="col-step-cell">
+            <div class="step-num">Step 3</div>
+            <div class="step-name">Open enrollment<br>process</div>
+          </td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td id="teacher-3" class="cell"><div class="card c-teacher">Opens enrollment in student portal &amp; announces available projects</div></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+        </tr>
+
+        <!-- ── Step 4 ── -->
+        <tr>
+          <td class="col-step-cell">
+            <div class="step-num">Step 4</div>
+            <div class="step-name">Enroll to course<br>/ internship</div>
+          </td>
+          <td id="pm-4"       class="cell"><div class="card c-student">Enrolls to course / internship</div></td>
+          <td id="dev-4"      class="cell"><div class="card c-student">Enrolls to course / internship</div></td>
+          <td id="designer-4" class="cell"><div class="card c-student">Enrolls to course / internship</div></td>
+          <td id="tester-4"   class="cell"><div class="card c-student">Enrolls to course / internship</div></td>
+          <td class="cell empty"></td>
+          <td id="marketing-4" class="cell"><div class="card c-student">Enrolls to course / internship</div></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+        </tr>
+
+        <!-- ── Step 5 ── -->
+        <tr>
+          <td class="col-step-cell">
+            <div class="step-num">Step 5</div>
+            <div class="step-name">Apply to project<br>(3 choices)</div>
+          </td>
+          <td id="pm-5"       class="cell"><div class="card c-student">Submits application to 3 projects</div></td>
+          <td id="dev-5"      class="cell"><div class="card c-student">Submits application to 3 projects</div></td>
+          <td id="designer-5" class="cell"><div class="card c-student">Submits application to 3 projects</div></td>
+          <td id="tester-5"   class="cell"><div class="card c-student">Submits application to 3 projects</div></td>
+          <td id="mentor-5"   class="cell"><div class="card c-mentor">Guides students through the application process</div></td>
+          <td id="marketing-5" class="cell"><div class="card c-student">Submits application to 3 projects</div></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+        </tr>
+
+        <!-- ── Step 6 ── -->
+        <tr>
+          <td class="col-step-cell">
+            <div class="step-num">Step 6</div>
+            <div class="step-name">Select students<br>to projects</div>
+          </td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+          <td id="mentor-6"  class="cell"><div class="card c-mentor">Assists in evaluating candidates</div></td>
+          <td class="cell empty"></td>
+          <td id="teacher-6" class="cell"><div class="card c-teacher">Makes final student–project assignments</div></td>
+          <td id="ceo-6"     class="cell"><div class="card c-ceo">Reviews &amp; approves selections</div></td>
+          <td id="ipo-6"     class="cell"><div class="card c-ipo">Reviews candidate fit &amp; project needs</div></td>
+        </tr>
+
+        <!-- ── Step 7 ── -->
+        <tr>
+          <td class="col-step-cell">
+            <div class="step-num">Step 7</div>
+            <div class="step-name">Inform students<br>of their project</div>
+          </td>
+          <td id="pm-7"       class="cell"><div class="card c-student">Receives project &amp; role assignment</div></td>
+          <td id="dev-7"      class="cell"><div class="card c-student">Receives project &amp; role assignment</div></td>
+          <td id="designer-7" class="cell"><div class="card c-student">Receives project &amp; role assignment</div></td>
+          <td id="tester-7"   class="cell"><div class="card c-student">Receives project &amp; role assignment</div></td>
+          <td class="cell empty"></td>
+          <td id="marketing-7" class="cell"><div class="card c-student">Receives project &amp; role assignment</div></td>
+          <td id="teacher-7"  class="cell"><div class="card c-teacher">Notifies all students of their assignments</div></td>
+          <td class="cell empty"></td>
+          <td class="cell empty"></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Student roles</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div>Mentors</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>theFIRMA Teacher</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f43f5e"></div>theFIRMA CEO</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Internal PO</div>
+  </div>
+
+  <script>
+    window.addEventListener('load', () => {
+      const wrapper = document.querySelector('.scroll-wrapper');
+      const NS = 'http://www.w3.org/2000/svg';
+
+      const svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('width',  wrapper.scrollWidth);
+      svg.setAttribute('height', wrapper.scrollHeight);
+      Object.assign(svg.style, {
+        position: 'absolute', top: '0', left: '0',
+        pointerEvents: 'none', overflow: 'visible'
+      });
+
+      // One arrowhead marker per colour
+      const palette = {
+        G: '#22c55e',   // teacher
+        A: '#f59e0b',   // student
+        P: '#8b5cf6',   // mentor
+        R: '#f43f5e',   // ceo
+        B: '#3b82f6',   // ipo
+      };
+      const defs = document.createElementNS(NS, 'defs');
+      for (const [key, col] of Object.entries(palette)) {
+        const m = document.createElementNS(NS, 'marker');
+        m.setAttribute('id', `ah-${key}`);
+        m.setAttribute('markerWidth',  '7');
+        m.setAttribute('markerHeight', '5');
+        m.setAttribute('refX', '6');
+        m.setAttribute('refY', '2.5');
+        m.setAttribute('orient', 'auto');
+        const p = document.createElementNS(NS, 'path');
+        p.setAttribute('d', 'M0,0 L7,2.5 L0,5 Z');
+        p.setAttribute('fill', col);
+        m.appendChild(p);
+        defs.appendChild(m);
+      }
+      svg.appendChild(defs);
+      wrapper.appendChild(svg);
+
+      // Get cell rect in SVG-space (relative to scroll-wrapper top-left)
+      function rect(id) {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        const er = el.getBoundingClientRect();
+        const wr = wrapper.getBoundingClientRect();
+        const x = er.left - wr.left;
+        const y = er.top  - wr.top;
+        return { x, y, w: er.width, h: er.height,
+                 cx: x + er.width  / 2,
+                 cy: y + er.height / 2 };
+      }
+
+      // Point on the edge of a cell facing direction (dx,dy)
+      function edge(cell, dx, dy) {
+        const len = Math.hypot(dx, dy);
+        if (len < 1) return { x: cell.cx, y: cell.cy };
+        const nx = dx / len, ny = dy / len;
+        const t = Math.min(
+          (cell.w / 2 - 3) / Math.abs(nx + 1e-9),
+          (cell.h / 2 - 3) / Math.abs(ny + 1e-9)
+        );
+        return { x: cell.cx + nx * t, y: cell.cy + ny * t };
+      }
+
+      function arrow(fromId, toId, ck) {
+        const f = rect(fromId), t = rect(toId);
+        if (!f || !t) return;
+
+        const dx = t.cx - f.cx, dy = t.cy - f.cy;
+        const s = edge(f,  dx,  dy);
+        const e = edge(t, -dx, -dy);
+
+        const ax = Math.abs(dx), ay = Math.abs(dy);
+        let d;
+
+        if (ax < 12) {
+          // Straight vertical
+          d = `M${s.x},${s.y} L${e.x},${e.y}`;
+        } else if (ay < 18) {
+          // Horizontal — arc over the top so arrows don't overlap cell content
+          const bump = Math.min(22, Math.hypot(dx, dy) * 0.18);
+          d = `M${s.x},${s.y} Q${(s.x+e.x)/2},${(s.y+e.y)/2 - bump} ${e.x},${e.y}`;
+        } else {
+          // Diagonal — cubic S-curve
+          d = `M${s.x},${s.y} C${s.x+dx*0.45},${s.y} ${e.x-dx*0.45},${e.y} ${e.x},${e.y}`;
+        }
+
+        const path = document.createElementNS(NS, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('stroke', palette[ck]);
+        path.setAttribute('stroke-width', '1.5');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('opacity', '0.7');
+        path.setAttribute('marker-end', `url(#ah-${ck})`);
+        svg.appendChild(path);
+      }
+
+      // ── Step 1: CEO and IPO put project into PG ──
+      arrow('ceo-1',  'ipo-1',     'R');   // CEO hands off to IPO
+
+      // ── Step 1 → 2: handoff to Teacher for role planning ──
+      arrow('ceo-1',  'teacher-2', 'R');
+      arrow('ipo-1',  'teacher-2', 'B');
+
+      // ── Step 2: CEO and IPO approve Teacher's plan ──
+      arrow('ceo-2',  'teacher-2', 'R');
+      arrow('ipo-2',  'teacher-2', 'B');
+
+      // ── Step 2 → 3: Teacher opens enrollment ──
+      arrow('teacher-2', 'teacher-3', 'G');
+
+      // ── Step 3 → 4: Teacher triggers student enrollment ──
+      arrow('teacher-3', 'pm-4',       'G');
+      arrow('teacher-3', 'dev-4',      'G');
+      arrow('teacher-3', 'designer-4', 'G');
+      arrow('teacher-3', 'tester-4',   'G');
+      arrow('teacher-3', 'marketing-4','G');
+
+      // ── Step 4 → 5: Students progress from enrolling to applying ──
+      arrow('pm-4',       'pm-5',       'A');
+      arrow('dev-4',      'dev-5',      'A');
+      arrow('designer-4', 'designer-5', 'A');
+      arrow('tester-4',   'tester-5',   'A');
+      arrow('marketing-4','marketing-5','A');
+
+      // ── Step 5: All student roles consult Mentors ──
+      arrow('pm-5',       'mentor-5',   'A');
+      arrow('dev-5',      'mentor-5',   'A');
+      arrow('designer-5', 'mentor-5',   'A');
+      arrow('tester-5',   'mentor-5',   'A');
+      arrow('marketing-5','mentor-5',   'A');
+
+      // ── Step 5 → 6: Applications reach CEO and IPO for review ──
+      arrow('marketing-5', 'ceo-6', 'A');
+      arrow('marketing-5', 'ipo-6', 'A');
+
+      // ── Step 6: Mentor + CEO + IPO all feed Teacher's final decision ──
+      arrow('mentor-5',  'mentor-6',  'P');
+      arrow('mentor-6',  'teacher-6', 'P');
+      arrow('ceo-6',     'teacher-6', 'R');
+      arrow('ipo-6',     'teacher-6', 'B');
+
+      // ── Step 6 → 7: Teacher informs students ──
+      arrow('teacher-6', 'teacher-7', 'G');
+
+      // ── Step 7: Teacher fans out to all student roles ──
+      arrow('teacher-7', 'pm-7',       'G');
+      arrow('teacher-7', 'dev-7',      'G');
+      arrow('teacher-7', 'designer-7', 'G');
+      arrow('teacher-7', 'tester-7',   'G');
+      arrow('teacher-7', 'marketing-7','G');
+    });
+  </script>
+
+</body>
+</html>
